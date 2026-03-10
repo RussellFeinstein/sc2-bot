@@ -1,0 +1,53 @@
+# Secrets
+.env
+*.env
+secrets.json
+credentials.json
+ladder.zip
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+dist/
+build/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+
+# Data (large files — use DVC or manual sync)
+data/raw_replays/
+data/processed/
+data/features/
+data/labels/
+*.SC2Replay
+
+# Model artifacts (large)
+bot/ml/models/*.pkl
+bot/ml/models/*.pt
+bot/ml/models/*.cbm
+bot/ml/models/*.lgbm
+bot/ml/models/*.json
+!bot/ml/models/.gitkeep
+
+# Jupyter
+.ipynb_checkpoints/
+experiments/notebooks/.ipynb_checkpoints/
+
+# AI Arena submission artifact
+ladder.zip

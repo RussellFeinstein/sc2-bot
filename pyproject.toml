@@ -1,0 +1,44 @@
+[project]
+name = "sc2-bot"
+version = "0.1.0"
+description = "A human-modeling StarCraft II Zerg bot that learns strategic abstractions from replays"
+requires-python = ">=3.11"
+
+dependencies = [
+    "burnysc2>=6.0.0",          # python-sc2 fork actively maintained for modern SC2 API
+    "sc2reader>=1.9.0",         # replay parsing and offline dataset creation
+    "torch>=2.2.0",             # PyTorch for neural components
+    "lightgbm>=4.3.0",          # tabular ML: opponent modeling, fight prediction
+    "xgboost>=2.0.0",           # tabular ML: backup/comparison
+    "scikit-learn>=1.4.0",      # preprocessing, pipelines, evaluation
+    "numpy>=1.26.0",
+    "pandas>=2.2.0",
+    "pyarrow>=15.0.0",          # parquet I/O for feature store
+    "duckdb>=0.10.0",           # local analytical queries over feature parquet files
+    "loguru>=0.7.0",            # structured logging
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.3.0",
+    "mypy>=1.9.0",
+    "ipykernel>=6.0.0",
+    "jupyterlab>=4.0.0",
+]
+
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.backends.legacy:build"
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

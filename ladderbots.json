@@ -1,0 +1,11 @@
+{
+  "bots": {
+    "ZergBot": {
+      "race": "Zerg",
+      "type": "python",
+      "rootpath": ".",
+      "filename": "bot/main.py",
+      "botname": "ZergBot"
+    }
+  }
+}
