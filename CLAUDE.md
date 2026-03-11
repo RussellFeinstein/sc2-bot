@@ -145,7 +145,7 @@ mypy bot/ training/
 
 ## Version File
 
-`pyproject.toml` — current: `0.1.3`
+`pyproject.toml` — current: `0.1.4`
 
 ## Key Decisions
 
