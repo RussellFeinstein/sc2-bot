@@ -1,0 +1,111 @@
+# sc2-bot Project Roadmap
+
+## Phase 1: Scripted Bot (current — `feature/phase1-scripted-bot`)
+
+Get the bot running end-to-end and beating Easy AI with pure scripted logic. No ML.
+
+**Done:**
+- Project scaffold, all module stubs wired in `main.py`
+- `GameState` snapshot, `FeatureExtractor`, `BeliefState`, `Blackboard`
+- `BuildOrderExecutor`, `EconomyManager` (using `distribute_workers()`), `ProductionManager`
+- `UpgradeManager`, `ArmyManager`, `ScoutingManager`, `DecisionLogger`
+
+**Remaining:**
+- Finish and test the scripted bot against Easy/Medium AI
+- Validate the full `on_step` loop runs without errors
+- Tune drone targets, build order timings, army attack thresholds
+
+---
+
+## Phase 1.5: Speed Mining Optimization
+
+**When**: After Phase 1 bot wins vs Easy AI.
+**Why**: ~10-12% mineral income boost. No pip-installable module exists — must build from scratch.
+
+Replace `distribute_workers()` in `EconomyManager` with a custom `SpeedMiner` class implementing:
+
+1. **Initial worker split** — frame 0, split 12 drones across 8 patches (close-first)
+2. **Close-patch prioritization** — 2 workers on close patches before far patches
+3. **Mineral stacking** — `move` to offset position + queued `gather` to skip deceleration
+4. **Return cargo optimization** — immediate `HARVEST_RETURN` to skip idle frames
+
+**Files:** new `bot/macro/speed_mining.py`, `tests/test_speed_mining.py`. Modify `config.py`, `economy.py`, `main.py`.
+
+**Config constants:**
+```python
+MINERAL_CLOSE_DISTANCE = 5.0
+MINERAL_WORKERS_PER_CLOSE_PATCH = 2
+MINERAL_WORKERS_PER_FAR_PATCH = 2
+MINERAL_WORKERS_PER_BASE_MAX = 16
+MINERAL_WALK_OFFSET = 2.375
+MINERAL_OWNERSHIP_RADIUS = 10.0
+GAS_WORKERS_PER_EXTRACTOR = 3
+```
+
+**SpeedMiner data structures:**
+```python
+@dataclass
+class TownhallInfo:
+    tag: int
+    position: Point2
+    close_patches: list[int]
+    far_patches: list[int]
+
+class SpeedMiner:
+    _worker_to_patch: dict[int, int]
+    _patch_to_workers: dict[int, set[int]]
+    _gas_workers: set[int]
+    _townhall_info: dict[int, TownhallInfo]
+    _worker_returning: set[int]
+```
+
+**Per-step logic:** cleanup dead workers/depleted patches, handle base changes, manage gas, assign new drones, issue mining commands (worker state machine).
+
+**Worker state machine:**
+
+| State | Detection | Action |
+|-------|-----------|--------|
+| IDLE | `worker.is_idle` | `_speed_mine_gather(worker, patch)` |
+| CARRYING | `is_carrying_minerals`, not in `_worker_returning` | `HARVEST_RETURN`, add to set |
+| JUST RETURNED | was in set, not carrying now | `_speed_mine_gather()` |
+| GATHERING (correct) | `order_target == patch.tag` | no-op |
+| GATHERING (wrong) | mismatched target | re-issue gather |
+| MOVING | has move order | no-op (mineral walk in progress) |
+
+**Mineral stacking trick:** compute offset position (`patch.position` toward townhall by 2.375 units), `worker.move(offset)`, then `worker.gather(patch, queue=True)`.
+
+**Edge cases:** drone dies/morphs — cleanup removes from maps. Patch depletes — workers reassigned same frame. Base lost — orphaned workers redistribute. Workers with BUILD/ATTACK orders — skip.
+
+---
+
+## Phase 2: Creep Spread Strategy
+
+Replace `map_center` placeholder with strategic tumor placement:
+- Base connection paths (main, natural, third)
+- Choke-point watch positions for vision
+- Defensive arcs toward likely attack paths
+
+---
+
+## Phase 3: ML Model Training
+
+- Opening classifier (enemy opening from partial game state, T <= 3 min)
+- Attack timing predictor (P(attack within 2 min))
+- Engagement win probability (army comp + upgrades + positioning)
+- Strategic policy model (full belief state to macro action enum)
+
+---
+
+## Phase 4: ML Integration
+
+- Wire trained models into `inference.py`
+- `StrategicPolicy` switches from heuristic to model-based decisions
+- `OpponentModel` uses opening classifier for belief state updates
+
+---
+
+## Phase 5: Opponent Adaptation
+
+- Per-opponent memory across games
+- Adaptation of strategic policy based on opponent history
+- AI Arena ladder submission (`ladderbots.json`)

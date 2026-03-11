@@ -9,6 +9,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
+from sc2.ids.unit_typeid import UnitTypeId
+
 if TYPE_CHECKING:
     from sc2.bot_ai import BotAI
 
@@ -58,7 +60,14 @@ class GameState:
 
     def snapshot(self) -> GameStateSnapshot:
         bot = self._bot
-        # TODO(Phase 1): fill in all fields using bot.units, bot.structures, etc.
+
+        # Bases: completed hatcheries, lairs, and hives
+        base_count = bot.townhalls.ready.amount
+
+        # Mineral saturation: actual workers / optimal workers across all ready bases
+        ideal_workers = sum(th.ideal_harvesters for th in bot.townhalls.ready)
+        mineral_saturation = bot.workers.amount / max(1, ideal_workers)
+
         return GameStateSnapshot(
             time=bot.time,
             minerals=bot.minerals,
@@ -68,24 +77,24 @@ class GameState:
             supply_left=bot.supply_left,
             worker_count=bot.workers.amount,
             army_supply=bot.supply_army,
-            base_count=0,       # placeholder
-            larva_count=0,
-            queen_count=0,
-            ling_count=0,
-            bane_count=0,
-            roach_count=0,
-            ravager_count=0,
-            hydra_count=0,
-            muta_count=0,
-            ultra_count=0,
-            spawning_pool_exists=False,
-            roach_warren_exists=False,
-            lair_exists=False,
-            hive_exists=False,
-            spire_exists=False,
-            gas_buildings=0,
-            mineral_saturation=0.0,
-            enemy_base_location_known=False,
-            enemy_units_visible=0,
-            enemy_structures_visible=0,
+            base_count=base_count,
+            larva_count=bot.larva.amount,
+            queen_count=bot.units(UnitTypeId.QUEEN).amount,
+            ling_count=bot.units(UnitTypeId.ZERGLING).amount,
+            bane_count=bot.units(UnitTypeId.BANELING).amount,
+            roach_count=bot.units(UnitTypeId.ROACH).amount,
+            ravager_count=bot.units(UnitTypeId.RAVAGER).amount,
+            hydra_count=bot.units(UnitTypeId.HYDRALISK).amount,
+            muta_count=bot.units(UnitTypeId.MUTALISK).amount,
+            ultra_count=bot.units(UnitTypeId.ULTRALISK).amount,
+            spawning_pool_exists=bot.structures(UnitTypeId.SPAWNINGPOOL).exists,
+            roach_warren_exists=bot.structures(UnitTypeId.ROACHWARREN).exists,
+            lair_exists=bot.structures(UnitTypeId.LAIR).ready.exists,
+            hive_exists=bot.structures(UnitTypeId.HIVE).ready.exists,
+            spire_exists=bot.structures(UnitTypeId.SPIRE).ready.exists,
+            gas_buildings=bot.gas_buildings.amount,
+            mineral_saturation=mineral_saturation,
+            enemy_base_location_known=bot.enemy_structures.amount > 0,
+            enemy_units_visible=bot.enemy_units.amount,
+            enemy_structures_visible=bot.enemy_structures.amount,
         )
