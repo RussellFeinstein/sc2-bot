@@ -43,9 +43,15 @@ DEFAULT_OPENING = "pool_first_expand"
 # Build an overlord when free supply drops to or below this value
 OVERLORD_SUPPLY_BUFFER = 2
 
-# ── Attack thresholds ────────────────────────────────────────────────────────
-# Minimum army supply before the bot attacks under STANDARD_MACRO
-ATTACK_ARMY_SUPPLY = 20
+# ── Army state machine ──────────────────────────────────────────────────────
+# Minimum army supply to commit to an attack
+ATTACK_COMMIT_SUPPLY = 40
+# Retreat if army supply drops below this absolute floor during an attack
+RETREAT_ARMY_SUPPLY = 15
+# After regrouping, must rebuild to this supply before attacking again
+REGROUP_THRESHOLD = 25
+# Retreat if army drops to this fraction of the supply when the attack started
+RETREAT_LOSS_RATIO = 0.40
 
 # ── Strategic action confidence thresholds ────────────────────────────────────
 # Minimum ML model probability to override the default action
