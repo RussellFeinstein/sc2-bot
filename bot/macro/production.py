@@ -5,8 +5,8 @@ from typing import TYPE_CHECKING
 
 from sc2.ids.unit_typeid import UnitTypeId
 
+from bot.config import DRONE_TARGET_TWO_BASE, OVERLORD_SUPPLY_BUFFER
 from bot.core.blackboard import MacroAction
-from bot.config import DRONE_TARGET_TWO_BASE
 
 if TYPE_CHECKING:
     from sc2.bot_ai import BotAI
@@ -33,12 +33,22 @@ class ProductionManager:
         pool_ready = bot.structures(UnitTypeId.SPAWNINGPOOL).ready.exists
         army_action = action in _ARMY_PRIORITY_ACTIONS
 
+        # ── Supply management ────────────────────────────────────────────
+        # Build overlords before anything else to avoid supply blocks.
+        # At supply cap 200 no more overlords are needed.
+        needs_overlord = (
+            bot.supply_left <= OVERLORD_SUPPLY_BUFFER
+            and bot.supply_cap < 200
+            and not bot.already_pending(UnitTypeId.OVERLORD)
+        )
+        if needs_overlord and bot.can_afford(UnitTypeId.OVERLORD):
+            bot.larva.first.train(UnitTypeId.OVERLORD)
+            if not bot.larva:
+                return
+
+        # ── Unit production ──────────────────────────────────────────────
         # Spend every affordable larva this step — never let larvae accumulate.
         # Sitting at the 3-per-hatchery cap pauses natural larva generation entirely.
-        #
-        # NOTE: intentional larva banking (holding larvae for a timing attack/all-in burst)
-        # is a valid advanced technique but requires a named "bank mode" from the strategic
-        # layer.  Phase 1 always spends.  See memory/planning.md for the future design.
         for larva in bot.larva:
             if army_action and pool_ready:
                 if bot.can_afford(UnitTypeId.ZERGLING):
@@ -47,6 +57,5 @@ class ProductionManager:
                 if bot.can_afford(UnitTypeId.DRONE):
                     larva.train(UnitTypeId.DRONE)
             elif pool_ready:
-                # Drone target met — bleed excess larva into zerglings
                 if bot.can_afford(UnitTypeId.ZERGLING):
                     larva.train(UnitTypeId.ZERGLING)

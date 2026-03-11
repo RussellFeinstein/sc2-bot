@@ -55,9 +55,9 @@ class ArmyManager:
             for unit in army.idle:
                 unit.move(rally)
 
-        # All other actions: hold position near start location
+        # All other actions: rally between main and natural ramp
         else:
-            rally = bot.start_location
+            rally = bot.main_base_ramp.top_center if bot.main_base_ramp else bot.start_location
             for unit in army.idle:
-                if unit.distance_to(rally) > 20:
+                if unit.distance_to(rally) > 15:
                     unit.move(rally)

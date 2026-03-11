@@ -11,8 +11,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from bot.config import ATTACK_ARMY_SUPPLY, STRATEGY_OVERRIDE_THRESHOLD
 from bot.core.blackboard import Blackboard, MacroAction
-from bot.config import STRATEGY_OVERRIDE_THRESHOLD
 
 if TYPE_CHECKING:
     from bot.core.belief_state import BeliefState
@@ -45,6 +45,10 @@ class StrategicPolicy:
 
         if snapshot.base_count < 2 and snapshot.worker_count >= 16:
             return MacroAction.FAST_EXPAND
+
+        # Mid-game: attack when army is large enough
+        if snapshot.army_supply >= ATTACK_ARMY_SUPPLY:
+            return MacroAction.PRESSURE_PUSH
 
         return MacroAction.STANDARD_MACRO
 

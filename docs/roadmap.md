@@ -1,6 +1,6 @@
 # sc2-bot Project Roadmap
 
-## Phase 1: Scripted Bot (current — `feature/phase1-scripted-bot`)
+## Phase 1: Scripted Bot (current — `feature/01-scripted-macro-bot`)
 
 Get the bot running end-to-end and beating Easy AI with pure scripted logic. No ML.
 
@@ -17,9 +17,18 @@ Get the bot running end-to-end and beating Easy AI with pure scripted logic. No 
 
 ---
 
-## Phase 1.5: Speed Mining Optimization
+## Phase 2: Creep Spread Strategy (`feature/02-creep-spread`)
 
-**When**: After Phase 1 bot wins vs Easy AI.
+Replace `map_center` placeholder with strategic tumor placement:
+- Base connection paths (main, natural, third)
+- Choke-point watch positions for vision
+- Defensive arcs toward likely attack paths
+
+---
+
+## Phase 3: Speed Mining Optimization (`feature/03-speed-mining`)
+
+**When**: After creep spread is functional.
 **Why**: ~10-12% mineral income boost. No pip-installable module exists — must build from scratch.
 
 Replace `distribute_workers()` in `EconomyManager` with a custom `SpeedMiner` class implementing:
@@ -78,16 +87,7 @@ class SpeedMiner:
 
 ---
 
-## Phase 2: Creep Spread Strategy
-
-Replace `map_center` placeholder with strategic tumor placement:
-- Base connection paths (main, natural, third)
-- Choke-point watch positions for vision
-- Defensive arcs toward likely attack paths
-
----
-
-## Phase 3: ML Model Training
+## Phase 4: ML Model Training (`feature/04-ml-model-training`)
 
 - Opening classifier (enemy opening from partial game state, T <= 3 min)
 - Attack timing predictor (P(attack within 2 min))
@@ -96,7 +96,7 @@ Replace `map_center` placeholder with strategic tumor placement:
 
 ---
 
-## Phase 4: ML Integration
+## Phase 5: ML Integration (`feature/05-ml-inference-integration`)
 
 - Wire trained models into `inference.py`
 - `StrategicPolicy` switches from heuristic to model-based decisions
@@ -104,7 +104,7 @@ Replace `map_center` placeholder with strategic tumor placement:
 
 ---
 
-## Phase 5: Opponent Adaptation
+## Phase 6: Opponent Adaptation (`feature/06-opponent-adaptation`)
 
 - Per-opponent memory across games
 - Adaptation of strategic policy based on opponent history

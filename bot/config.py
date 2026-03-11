@@ -39,6 +39,14 @@ DRONE_TARGET_FOUR_BASE = 60
 # Which scripted opening to use when no ML model is loaded
 DEFAULT_OPENING = "pool_first_expand"
 
+# ── Supply management ────────────────────────────────────────────────────────
+# Build an overlord when free supply drops to or below this value
+OVERLORD_SUPPLY_BUFFER = 2
+
+# ── Attack thresholds ────────────────────────────────────────────────────────
+# Minimum army supply before the bot attacks under STANDARD_MACRO
+ATTACK_ARMY_SUPPLY = 20
+
 # ── Strategic action confidence thresholds ────────────────────────────────────
 # Minimum ML model probability to override the default action
 STRATEGY_OVERRIDE_THRESHOLD = 0.65
