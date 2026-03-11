@@ -29,6 +29,7 @@ def _snapshot(**overrides) -> GameStateSnapshot:
         ultra_count=0,
         spawning_pool_exists=True,
         roach_warren_exists=False,
+        evo_chamber_exists=False,
         lair_exists=False,
         hive_exists=False,
         spire_exists=False,

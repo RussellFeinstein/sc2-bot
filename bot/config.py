@@ -41,7 +41,21 @@ DEFAULT_OPENING = "pool_first_expand"
 
 # ── Supply management ────────────────────────────────────────────────────────
 # Build an overlord when free supply drops to or below this value
-OVERLORD_SUPPLY_BUFFER = 2
+OVERLORD_SUPPLY_BUFFER = 5
+# Additional buffer per extra base beyond the first
+OVERLORD_SUPPLY_BUFFER_PER_BASE = 2
+# Max overlords building simultaneously
+MAX_PENDING_OVERLORDS = 2
+
+# ── Gas management ──────────────────────────────────────────────────────────
+# Max extractors when teching to roach (keeps mineral economy strong)
+GAS_CAP_ROACH_TECH = 3
+
+# ── Queen management ────────────────────────────────────────────────────────
+# Target queen count per hatchery (inject + defense/creep)
+QUEENS_PER_HATCHERY = 2
+# How close a queen must be to a hatchery to count as "covering" it
+QUEEN_HATCHERY_DISTANCE = 8.0
 
 # ── Army state machine ──────────────────────────────────────────────────────
 # Minimum army supply to commit to an attack

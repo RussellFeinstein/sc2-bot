@@ -40,6 +40,7 @@ class GameStateSnapshot:
     # Structures
     spawning_pool_exists: bool
     roach_warren_exists: bool
+    evo_chamber_exists: bool
     lair_exists: bool
     hive_exists: bool
     spire_exists: bool
@@ -89,6 +90,7 @@ class GameState:
             ultra_count=bot.units(UnitTypeId.ULTRALISK).amount,
             spawning_pool_exists=bot.structures(UnitTypeId.SPAWNINGPOOL).exists,
             roach_warren_exists=bot.structures(UnitTypeId.ROACHWARREN).exists,
+            evo_chamber_exists=bot.structures(UnitTypeId.EVOLUTIONCHAMBER).exists,
             lair_exists=bot.structures(UnitTypeId.LAIR).ready.exists,
             hive_exists=bot.structures(UnitTypeId.HIVE).ready.exists,
             spire_exists=bot.structures(UnitTypeId.SPIRE).ready.exists,

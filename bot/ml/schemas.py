@@ -37,6 +37,7 @@ ARMY_FEATURES = [
 TECH_FEATURES = [
     "spawning_pool_exists",
     "roach_warren_exists",
+    "evo_chamber_exists",
     "lair_exists",
     "hive_exists",
     "spire_exists",
