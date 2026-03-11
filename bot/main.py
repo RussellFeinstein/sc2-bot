@@ -52,8 +52,11 @@ class ZergBot(BotAI):
         self.army = ArmyManager(self)
         self.scouting = ScoutingManager(self)
         self.decision_logger = DecisionLogger()
+        self._gg_sent = False
 
     async def on_step(self, iteration: int) -> None:
+        await self._handle_chat()
+
         # 1. Perception
         snapshot = self.game_state.snapshot()
         features = self.feature_extractor.extract(snapshot)
@@ -71,6 +74,17 @@ class ZergBot(BotAI):
         await self.upgrades.step()
         await self.scouting.step()
         await self.army.step()
+
+    async def _handle_chat(self) -> None:
+        """Respond 'gg' when the opponent sends 'gg'."""
+        if self._gg_sent:
+            return
+        for msg in self.state.chat:
+            if msg.player_id != self.player_id and "gg" in msg.message.lower():
+                await self.chat_send("gg")
+                self._gg_sent = True
+                logger.info("Opponent said gg — responded gg")
+                break
 
     async def on_end(self, game_result: Result) -> None:
         logger.info(f"Game ended: {game_result}")

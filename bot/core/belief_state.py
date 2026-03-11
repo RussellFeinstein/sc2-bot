@@ -45,6 +45,11 @@ class BeliefState:
     # Per-step evidence list (human-readable, used by decision_logger)
     evidence: list[str] = field(default_factory=list)
 
+    @property
+    def enemy_attack_imminent(self) -> bool:
+        """True when the attack-within-2-min probability exceeds 0.5."""
+        return self.p_attack_within_2min > 0.5
+
     def update(self, snapshot: "GameStateSnapshot", features: object) -> None:
         """Update beliefs given the latest game state snapshot and feature vector.
 

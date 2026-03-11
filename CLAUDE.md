@@ -145,7 +145,7 @@ mypy bot/ training/
 
 ## Version File
 
-`pyproject.toml` — current: `0.1.0`
+`pyproject.toml` — current: `0.1.4`
 
 ## Key Decisions
 
@@ -165,3 +165,7 @@ mypy bot/ training/
 - SC2 headless server setup for CI/automated testing not configured.
 - `ladderbots.json` format for AI Arena submission not yet written.
 - No opponent memory or per-opponent adaptation (Phase 5).
+
+## Roadmap
+
+See [docs/roadmap.md](docs/roadmap.md) for the full phased development plan including speed mining design, creep spread strategy, ML model targets, and AI Arena submission.

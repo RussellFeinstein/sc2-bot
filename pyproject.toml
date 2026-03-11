@@ -1,12 +1,12 @@
 [project]
 name = "sc2-bot"
-version = "0.1.0"
+version = "0.1.4"
 description = "A human-modeling StarCraft II Zerg bot that learns strategic abstractions from replays"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 
 dependencies = [
     "burnysc2>=6.0.0",          # python-sc2 fork actively maintained for modern SC2 API
-    "sc2reader>=1.9.0",         # replay parsing and offline dataset creation
+    "sc2reader>=1.8.0",         # replay parsing and offline dataset creation
     "torch>=2.2.0",             # PyTorch for neural components
     "lightgbm>=4.3.0",          # tabular ML: opponent modeling, fight prediction
     "xgboost>=2.0.0",           # tabular ML: backup/comparison
@@ -28,9 +28,12 @@ dev = [
     "jupyterlab>=4.0.0",
 ]
 
+[tool.setuptools.packages.find]
+include = ["bot*"]
+
 [build-system]
 requires = ["setuptools>=69"]
-build-backend = "setuptools.backends.legacy:build"
+build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 100
