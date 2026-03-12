@@ -19,6 +19,7 @@ from bot.config import (
     QUEENS_PER_HATCHERY,
 )
 from bot.core.blackboard import MacroAction
+from bot.macro.placement import tech_placement
 
 if TYPE_CHECKING:
     from sc2.bot_ai import BotAI
@@ -34,6 +35,8 @@ _ARMY_PRIORITY_ACTIONS = frozenset({
 class ProductionManager:
     def __init__(self, bot: "BotAI") -> None:
         self._bot = bot
+        self._evo_ordered = False
+        self._rw_ordered = False
 
     async def step(self) -> None:
         bot = self._bot
@@ -111,25 +114,29 @@ class ProductionManager:
         bot = self._bot
 
         # Roach warren: build when policy says TECH_TO_ROACH
-        if action == MacroAction.TECH_TO_ROACH:
-            if (
-                not bot.structures(UnitTypeId.ROACHWARREN).exists
-                and not bot.already_pending(UnitTypeId.ROACHWARREN)
-                and bot.can_afford(UnitTypeId.ROACHWARREN)
-                and bot.structures(UnitTypeId.SPAWNINGPOOL).ready.exists
-            ):
-                await bot.build(UnitTypeId.ROACHWARREN, near=bot.townhalls.first)
-                logger.info("Production: building roach warren")
+        if bot.structures(UnitTypeId.ROACHWARREN).exists or bot.already_pending(UnitTypeId.ROACHWARREN):
+            self._rw_ordered = False
+        elif (
+            not self._rw_ordered
+            and action == MacroAction.TECH_TO_ROACH
+            and bot.can_afford(UnitTypeId.ROACHWARREN)
+            and bot.structures(UnitTypeId.SPAWNINGPOOL).ready.exists
+        ):
+            await bot.build(UnitTypeId.ROACHWARREN, near=tech_placement(bot, bot.townhalls.first))
+            self._rw_ordered = True
+            logger.info("Production: building roach warren")
 
         # Evolution chamber: once we have 2 bases and a roach warren
-        if (
-            bot.townhalls.ready.amount >= 2
+        if bot.structures(UnitTypeId.EVOLUTIONCHAMBER).exists or bot.already_pending(UnitTypeId.EVOLUTIONCHAMBER):
+            self._evo_ordered = False  # reset flag once the engine sees it
+        elif (
+            not self._evo_ordered
+            and bot.townhalls.ready.amount >= 2
             and bot.structures(UnitTypeId.ROACHWARREN).exists
-            and not bot.structures(UnitTypeId.EVOLUTIONCHAMBER).exists
-            and not bot.already_pending(UnitTypeId.EVOLUTIONCHAMBER)
             and bot.can_afford(UnitTypeId.EVOLUTIONCHAMBER)
         ):
-            await bot.build(UnitTypeId.EVOLUTIONCHAMBER, near=bot.townhalls.first)
+            await bot.build(UnitTypeId.EVOLUTIONCHAMBER, near=tech_placement(bot, bot.townhalls.first))
+            self._evo_ordered = True
             logger.info("Production: building evolution chamber")
 
         # Lair: morph from main hatchery once roach warren + pool are ready

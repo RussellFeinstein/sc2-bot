@@ -125,5 +125,5 @@ class ArmyManager:
         bot = self._bot
         rally = bot.main_base_ramp.top_center if bot.main_base_ramp else bot.start_location
         for unit in army.idle:
-            if unit.distance_to(rally) > 15:
+            if unit.distance_to(rally) > 5:
                 unit.move(rally)

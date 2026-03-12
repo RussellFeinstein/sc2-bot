@@ -14,6 +14,8 @@ if TYPE_CHECKING:
 class EconomyManager:
     def __init__(self, bot: "BotAI") -> None:
         self._bot = bot
+        # Maps hatch tag → queen tag for in-flight inject commands
+        self._pending_injects: dict[int, int] = {}
 
     async def step(self) -> None:
         bot = self._bot
@@ -21,21 +23,40 @@ class EconomyManager:
         # Redistribute idle/oversaturated drones across bases and extractors
         await bot.distribute_workers()
 
-        # Queen macro: inject is highest priority; spare energy goes to creep spread.
-        # NOTE: creep tumor targeting uses map_center as a Phase 1 placeholder.
-        # Long-term, tumors should be placed strategically — base connection paths,
-        # choke-point watch positions, and defensive arcs.  See memory/planning.md.
-        hatcheries_needing_inject = bot.townhalls.filter(
+        # Queen inject assignment (only ready hatcheries can receive inject)
+        hatcheries_needing_inject = bot.townhalls.ready.filter(
             lambda th: not th.has_buff(BuffId.QUEENSPAWNLARVATIMER)
         )
 
-        for queen in bot.units(UnitTypeId.QUEEN).idle:
-            if queen.energy < 25:
-                continue
+        # Clear pending when: buff appeared, hatch died, queen died,
+        # or queen went idle (inject completed or failed)
+        idle_queen_tags = {q.tag for q in bot.units(UnitTypeId.QUEEN).idle}
+        all_queen_tags = {q.tag for q in bot.units(UnitTypeId.QUEEN)}
+        needing_tags = {th.tag for th in hatcheries_needing_inject}
+        self._pending_injects = {
+            h: q
+            for h, q in self._pending_injects.items()
+            if h in needing_tags and q in all_queen_tags
+            and q not in idle_queen_tags
+        }
 
-            if hatcheries_needing_inject:
-                target = hatcheries_needing_inject.closest_to(queen.position)
-                queen(AbilityId.EFFECT_INJECTLARVA, target)
-            else:
-                # All bases injected — spread creep toward map center (placeholder)
-                queen(AbilityId.BUILD_CREEPTUMOR_QUEEN, bot.game_info.map_center)
+        idle_queens = bot.units(UnitTypeId.QUEEN).idle.filter(
+            lambda q: q.energy >= 25
+        )
+        assigned_queen_tags: set[int] = set(self._pending_injects.values())
+
+        for hatch in hatcheries_needing_inject:
+            if hatch.tag in self._pending_injects:
+                continue  # a queen is already on the way
+            candidates = idle_queens.filter(
+                lambda q: q.tag not in assigned_queen_tags
+            )
+            if not candidates:
+                break
+            queen = min(
+                candidates,
+                key=lambda q: (q.distance_to(hatch.position), -q.energy),
+            )
+            queen(AbilityId.EFFECT_INJECTLARVA, hatch)
+            assigned_queen_tags.add(queen.tag)
+            self._pending_injects[hatch.tag] = queen.tag

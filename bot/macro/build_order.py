@@ -13,6 +13,7 @@ from sc2.ids.upgrade_id import UpgradeId
 
 from bot.strategy.opening_book import get_opening, BuildStep
 from bot.config import DEFAULT_OPENING
+from bot.macro.placement import tech_placement
 
 if TYPE_CHECKING:
     from sc2.bot_ai import BotAI
@@ -59,7 +60,7 @@ class BuildOrderExecutor:
                 return True  # already built or under construction
             if not bot.can_afford(UnitTypeId.SPAWNINGPOOL):
                 return False
-            await bot.build(UnitTypeId.SPAWNINGPOOL, near=bot.townhalls.first)
+            await bot.build(UnitTypeId.SPAWNINGPOOL, near=tech_placement(bot, bot.townhalls.first))
             return True
 
         if action == "build_hatchery_natural":
