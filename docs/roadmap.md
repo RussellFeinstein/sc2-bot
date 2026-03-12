@@ -18,7 +18,7 @@ Get the bot running end-to-end and beating Easy AI with pure scripted logic. No 
 
 Tune the scripted bot to beat Very Hard AI with roach-based play. No ML.
 
-**Completed (v0.1.5–v0.1.8):**
+**Completed (v0.1.5–v0.1.9):**
 - Army state machine with hysteresis (attack/retreat/regroup)
 - Strategic policy rework: 8-step rule-based decision tree
 - Roach tech path: roach warren -> lair -> evo chamber
@@ -31,7 +31,8 @@ Tune the scripted bot to beat Very Hard AI with roach-based play. No ML.
 - Tech-based gas management: cumulative gas cap (pool +1, RW +2, evo +1)
 - Smart attack targeting: defend home -> chase structures -> enemy start
 - Three-base droning in strategic policy
-- 31 tests across 5 test files
+- Global queen cap (`MAX_QUEENS = 8`) prevents supply waste on 4+ bases
+- 34 tests across 6 test files
 
 **Deferred to later phase:**
 - Ling runby/poke scouting (4-6 lings to enemy natural)
@@ -43,7 +44,6 @@ Tune the scripted bot to beat Very Hard AI with roach-based play. No ML.
 - Engagement evaluation (when to take fights vs retreat)
 - Better scouting (ling scouts, overlord positioning)
 - Basic micro (roach kiting, focus fire)
-- Queen cap: add a global MAX_QUEENS (6-9 depending on matchup) so we stop building queens on 4+ bases. Current `QUEENS_PER_HATCHERY=2` has no ceiling — 5 bases = 10 queens which is too many supply.
 
 ---
 

@@ -19,6 +19,7 @@ from bot.config import (
     MAX_PENDING_OVERLORDS,
     OVERLORD_SUPPLY_BUFFER,
     OVERLORD_SUPPLY_BUFFER_PER_BASE,
+    MAX_QUEENS,
     QUEEN_HATCHERY_DISTANCE,
     QUEENS_PER_HATCHERY,
 )
@@ -147,7 +148,7 @@ class ProductionManager:
             return
 
         queens = bot.units(UnitTypeId.QUEEN)
-        desired = bot.townhalls.ready.amount * QUEENS_PER_HATCHERY
+        desired = min(bot.townhalls.ready.amount * QUEENS_PER_HATCHERY, MAX_QUEENS)
         current = queens.amount + bot.already_pending(UnitTypeId.QUEEN)
 
         if current >= desired:

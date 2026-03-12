@@ -67,6 +67,8 @@ GAS_PER_SPIRE = 3            # muta production (future)
 QUEENS_PER_HATCHERY = 2
 # How close a queen must be to a hatchery to count as "covering" it
 QUEEN_HATCHERY_DISTANCE = 8.0
+# Global maximum queens regardless of base count (standard play caps ~6-9)
+MAX_QUEENS = 8
 
 # ── Army state machine ──────────────────────────────────────────────────────
 # Army supply per base required to commit to an attack
