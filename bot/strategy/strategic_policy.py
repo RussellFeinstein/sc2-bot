@@ -12,7 +12,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from bot.config import (
-    ATTACK_COMMIT_SUPPLY,
+    ATTACK_SUPPLY_PER_BASE,
+    DRONE_TARGET_THREE_BASE,
     DRONE_TARGET_TWO_BASE,
     STRATEGY_OVERRIDE_THRESHOLD,
 )
@@ -38,8 +39,9 @@ class StrategicPolicy:
           3. Need natural hatchery → FAST_EXPAND
           4. Two bases: drone up to saturation
           5. Two-base saturated, no roach warren → TECH_TO_ROACH
-          6. Army below attack threshold → STANDARD_MACRO
-          7. Army ready → PRESSURE_PUSH
+          6. Three+ bases: drone up to saturation
+          7. Army below attack threshold → STANDARD_MACRO
+          8. Army ready → PRESSURE_PUSH
         """
         # TODO(Phase 4): call ML policy model; override if confidence >= threshold
 
@@ -63,9 +65,14 @@ class StrategicPolicy:
         if snapshot.base_count >= 2 and not snapshot.roach_warren_exists:
             return MacroAction.TECH_TO_ROACH
 
-        # 6. Have tech, building up army
-        if snapshot.army_supply < ATTACK_COMMIT_SUPPLY:
+        # 6. Three+ bases: drone up to three-base saturation
+        if snapshot.base_count >= 3 and snapshot.worker_count < DRONE_TARGET_THREE_BASE:
+            return MacroAction.DRONE_GREED
+
+        # 7. Have tech, building up army (threshold scales with bases)
+        attack_threshold = max(snapshot.base_count, 2) * ATTACK_SUPPLY_PER_BASE
+        if snapshot.army_supply < attack_threshold:
             return MacroAction.STANDARD_MACRO
 
-        # 7. Army threshold reached: attack
+        # 8. Army threshold reached: attack
         return MacroAction.PRESSURE_PUSH

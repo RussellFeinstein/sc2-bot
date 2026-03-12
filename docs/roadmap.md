@@ -1,19 +1,49 @@
 # sc2-bot Project Roadmap
 
-## Phase 1: Scripted Bot (current — `feature/01-scripted-macro-bot`)
+## Phase 1: Scripted Bot (DONE — merged to `main` at v0.1.4)
 
 Get the bot running end-to-end and beating Easy AI with pure scripted logic. No ML.
 
-**Done:**
+**Completed:**
 - Project scaffold, all module stubs wired in `main.py`
 - `GameState` snapshot, `FeatureExtractor`, `BeliefState`, `Blackboard`
 - `BuildOrderExecutor`, `EconomyManager` (using `distribute_workers()`), `ProductionManager`
 - `UpgradeManager`, `ArmyManager`, `ScoutingManager`, `DecisionLogger`
+- Full `on_step` loop validated, bot beats Easy/Medium AI
+- `ladderbots.json` for AI Arena submission
+
+---
+
+## Phase 1.5: Bot Tuning (current — `feature/01.5-bot-tuning`)
+
+Tune the scripted bot to beat Very Hard AI with roach-based play. No ML.
+
+**Completed (v0.1.5–v0.1.8):**
+- Army state machine with hysteresis (attack/retreat/regroup)
+- Strategic policy rework: 8-step rule-based decision tree
+- Roach tech path: roach warren -> lair -> evo chamber
+- Queens: 2 per hatchery, nearest-idle inject logic with pending-inject tracking
+- Dynamic overlord production (buffer = 5 + 2 per extra base, max 2 pending)
+- Building placement away from mineral line (`placement.py`)
+- Fix duplicate builds, queen inject wandering
+- Expansion logic: saturation-based with army safety checks, mineral reservation
+- Attack threshold scales with base count (20 supply per base)
+- Tech-based gas management: cumulative gas cap (pool +1, RW +2, evo +1)
+- Smart attack targeting: defend home -> chase structures -> enemy start
+- Three-base droning in strategic policy
+- 31 tests across 5 test files
+
+**Deferred to later phase:**
+- Ling runby/poke scouting (4-6 lings to enemy natural)
+- Xel'Naga watchtower control
+- Map control lings at key intersections
 
 **Remaining:**
-- Finish and test the scripted bot against Easy/Medium AI
-- Validate the full `on_step` loop runs without errors
-- Tune drone targets, build order timings, army attack thresholds
+- Upgrades (roach speed, +1 missile, carapace)
+- Engagement evaluation (when to take fights vs retreat)
+- Better scouting (ling scouts, overlord positioning)
+- Basic micro (roach kiting, focus fire)
+- Queen cap: add a global MAX_QUEENS (6-9 depending on matchup) so we stop building queens on 4+ bases. Current `QUEENS_PER_HATCHERY=2` has no ceiling — 5 bases = 10 queens which is too many supply.
 
 ---
 

@@ -1,7 +1,7 @@
 """Army manager: state-machine-based attack routing with hysteresis.
 
 The army manager decouples from the per-frame strategic policy once an attack
-is committed.  The state machine prevents the "build 20 lings → attack → die →
+is committed.  The state machine prevents the "build 20 lings -> attack -> die ->
 repeat" loop by requiring meaningful army thresholds for transitions.
 """
 from __future__ import annotations
@@ -13,7 +13,7 @@ from loguru import logger
 from sc2.ids.unit_typeid import UnitTypeId
 
 from bot.config import (
-    ATTACK_COMMIT_SUPPLY,
+    ATTACK_SUPPLY_PER_BASE,
     REGROUP_THRESHOLD,
     RETREAT_ARMY_SUPPLY,
     RETREAT_LOSS_RATIO,
@@ -76,18 +76,19 @@ class ArmyManager:
         # Defensive override: always retreat regardless of state machine
         if action in _DEFENSIVE_ACTIONS:
             if self._state != ArmyState.BUILDING_UP:
-                logger.info(f"Army: defensive override → BUILDING_UP (was {self._state.name})")
+                logger.info(f"Army: defensive override -> BUILDING_UP (was {self._state.name})")
             self._state = ArmyState.BUILDING_UP
             self._rally_to_ramp(army)
             return
 
         # State transitions
-        self._update_state(action, army_supply)
+        base_count = bot.townhalls.amount
+        self._update_state(action, army_supply, base_count)
 
         # Execute current state behavior
         if self._state == ArmyState.ATTACKING:
-            if bot.enemy_start_locations:
-                target = bot.enemy_start_locations[0]
+            target = self._attack_target(army)
+            if target is not None:
                 for unit in army.idle:
                     unit.attack(target)
 
@@ -97,11 +98,12 @@ class ArmyManager:
         else:  # BUILDING_UP
             self._rally_to_ramp(army)
 
-    def _update_state(self, action: MacroAction, army_supply: int) -> None:
+    def _update_state(self, action: MacroAction, army_supply: int, base_count: int) -> None:
         prev = self._state
+        attack_threshold = max(base_count, 2) * ATTACK_SUPPLY_PER_BASE
 
         if self._state == ArmyState.BUILDING_UP:
-            if action in _ATTACK_ACTIONS and army_supply >= ATTACK_COMMIT_SUPPLY:
+            if action in _ATTACK_ACTIONS and army_supply >= attack_threshold:
                 self._state = ArmyState.ATTACKING
                 self._attack_start_supply = army_supply
 
@@ -119,7 +121,35 @@ class ArmyManager:
                 self._state = ArmyState.BUILDING_UP
 
         if self._state != prev:
-            logger.info(f"Army: {prev.name} → {self._state.name} (supply={army_supply})")
+            logger.info(f"Army: {prev.name} -> {self._state.name} (supply={army_supply})")
+
+    def _attack_target(self, army):
+        """Pick the best attack target position.
+
+        Priority:
+          1. Enemy units/structures near our townhalls (defend home)
+          2. Nearest visible enemy structure (chase remaining buildings)
+          3. Enemy start location (default march target)
+        """
+        bot = self._bot
+
+        # 1. Defend: enemy units near any of our bases
+        if bot.townhalls:
+            for th in bot.townhalls:
+                nearby_enemies = bot.enemy_units.closer_than(20, th.position)
+                if nearby_enemies:
+                    return nearby_enemies.closest_to(th.position).position
+
+        # 2. Chase: nearest visible enemy structure
+        if bot.enemy_structures:
+            army_center = army.center
+            return bot.enemy_structures.closest_to(army_center).position
+
+        # 3. Fallback: enemy start location
+        if bot.enemy_start_locations:
+            return bot.enemy_start_locations[0]
+
+        return None
 
     def _rally_to_ramp(self, army) -> None:
         bot = self._bot

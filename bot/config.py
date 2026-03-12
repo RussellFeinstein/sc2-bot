@@ -47,9 +47,20 @@ OVERLORD_SUPPLY_BUFFER_PER_BASE = 2
 # Max overlords building simultaneously
 MAX_PENDING_OVERLORDS = 2
 
+# ── Expansion ──────────────────────────────────────────────────────────────
+# Army supply required per expansion: base_count * multiplier = minimum army to expand
+# e.g. taking 3rd base = 3 * 8 = 24 supply; taking 4th = 4 * 8 = 32 supply
+EXPAND_ARMY_PER_BASE = 8
+# Mineral saturation ratio above which we should expand (1.0 = perfectly saturated)
+EXPAND_SATURATION_THRESHOLD = 0.9
+
 # ── Gas management ──────────────────────────────────────────────────────────
-# Max extractors when teching to roach (keeps mineral economy strong)
-GAS_CAP_ROACH_TECH = 3
+# Each tech adds extractors to the gas cap (cumulative, starting at 0)
+GAS_PER_SPAWNING_POOL = 1    # metabolic boost (ling speed)
+GAS_PER_ROACH_WARREN = 2     # roach production
+GAS_PER_EVO_CHAMBER = 1      # upgrades
+GAS_PER_HYDRA_DEN = 2        # hydra production (future)
+GAS_PER_SPIRE = 3            # muta production (future)
 
 # ── Queen management ────────────────────────────────────────────────────────
 # Target queen count per hatchery (inject + defense/creep)
@@ -58,8 +69,10 @@ QUEENS_PER_HATCHERY = 2
 QUEEN_HATCHERY_DISTANCE = 8.0
 
 # ── Army state machine ──────────────────────────────────────────────────────
-# Minimum army supply to commit to an attack
-ATTACK_COMMIT_SUPPLY = 40
+# Army supply per base required to commit to an attack
+# threshold = max(base_count, 2) * ATTACK_SUPPLY_PER_BASE
+# 2 bases = 40, 3 bases = 60, 4 bases = 80
+ATTACK_SUPPLY_PER_BASE = 20
 # Retreat if army supply drops below this absolute floor during an attack
 RETREAT_ARMY_SUPPLY = 15
 # After regrouping, must rebuild to this supply before attacking again

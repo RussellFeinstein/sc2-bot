@@ -64,11 +64,13 @@ See [AI Arena wiki](https://aiarena.net/wiki/bot-development/) for submission in
 
 | Phase | Goal | Status |
 |-------|------|--------|
-| 1 — Scripted bot | Stable ladder-capable Zerg bot, one opening, one combat policy | IN PROGRESS |
-| 2 — Replay pipeline | sc2reader ETL → feature parquet store | Planned |
-| 3 — ML models | Opening classifier, fight confidence, strategic policy | Planned |
-| 4 — Integration | ML plugged into decision layer | Planned |
-| 5 — Adaptation | Per-opponent memory, best-of-N meta | Planned |
+| 1 — Scripted bot | End-to-end Zerg bot with pool-first opening | Done (v0.1.4) |
+| 1.5 — Bot tuning | Roach tech, army state machine, beat Very Hard AI | **In Progress** |
+| 2 — Creep spread | Strategic tumor placement and base connection | Planned |
+| 3 — Speed mining | Custom worker micro for ~10% mineral income boost | Planned |
+| 4 — ML models | Opening classifier, fight confidence, strategic policy | Planned |
+| 5 — ML integration | Models plugged into decision layer | Planned |
+| 6 — Adaptation | Per-opponent memory, best-of-N meta | Planned |
 
 ## Tech Stack
 

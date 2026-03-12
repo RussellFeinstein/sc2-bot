@@ -1,5 +1,5 @@
 """Tests for StrategicPolicy decision tree."""
-from bot.config import ATTACK_COMMIT_SUPPLY, DRONE_TARGET_TWO_BASE
+from bot.config import ATTACK_SUPPLY_PER_BASE, DRONE_TARGET_THREE_BASE, DRONE_TARGET_TWO_BASE
 from bot.core.belief_state import BeliefState
 from bot.core.blackboard import Blackboard, MacroAction
 from bot.core.game_state import GameStateSnapshot
@@ -83,6 +83,16 @@ class TestDecisionTree:
         result = _policy().choose(snap, BeliefState())
         assert result == MacroAction.TECH_TO_ROACH
 
+    def test_drone_greed_three_base_unsaturated(self):
+        snap = _snapshot(
+            worker_count=DRONE_TARGET_TWO_BASE + 2,
+            base_count=3,
+            roach_warren_exists=True,
+            army_supply=20,
+        )
+        result = _policy().choose(snap, BeliefState())
+        assert result == MacroAction.DRONE_GREED
+
     def test_standard_macro_when_building_army(self):
         snap = _snapshot(
             worker_count=DRONE_TARGET_TWO_BASE,
@@ -94,11 +104,34 @@ class TestDecisionTree:
         assert result == MacroAction.STANDARD_MACRO
 
     def test_pressure_push_at_attack_threshold(self):
+        # 2 bases: threshold = 2 * ATTACK_SUPPLY_PER_BASE = 40
         snap = _snapshot(
             worker_count=DRONE_TARGET_TWO_BASE,
             base_count=2,
             roach_warren_exists=True,
-            army_supply=ATTACK_COMMIT_SUPPLY,
+            army_supply=2 * ATTACK_SUPPLY_PER_BASE,
+        )
+        result = _policy().choose(snap, BeliefState())
+        assert result == MacroAction.PRESSURE_PUSH
+
+    def test_standard_macro_below_scaled_threshold_three_base(self):
+        # 3 bases: threshold = 3 * 20 = 60; army at 50 should still be STANDARD_MACRO
+        snap = _snapshot(
+            worker_count=DRONE_TARGET_THREE_BASE,
+            base_count=3,
+            roach_warren_exists=True,
+            army_supply=50,
+        )
+        result = _policy().choose(snap, BeliefState())
+        assert result == MacroAction.STANDARD_MACRO
+
+    def test_pressure_push_at_scaled_threshold_three_base(self):
+        # 3 bases: threshold = 3 * 20 = 60
+        snap = _snapshot(
+            worker_count=DRONE_TARGET_THREE_BASE,
+            base_count=3,
+            roach_warren_exists=True,
+            army_supply=3 * ATTACK_SUPPLY_PER_BASE,
         )
         result = _policy().choose(snap, BeliefState())
         assert result == MacroAction.PRESSURE_PUSH

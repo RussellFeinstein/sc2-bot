@@ -11,7 +11,11 @@ from bot.config import (
     DRONE_TARGET_FOUR_BASE,
     DRONE_TARGET_THREE_BASE,
     DRONE_TARGET_TWO_BASE,
-    GAS_CAP_ROACH_TECH,
+    EXPAND_ARMY_PER_BASE,
+    EXPAND_SATURATION_THRESHOLD,
+    GAS_PER_EVO_CHAMBER,
+    GAS_PER_ROACH_WARREN,
+    GAS_PER_SPAWNING_POOL,
     MAX_PENDING_OVERLORDS,
     OVERLORD_SUPPLY_BUFFER,
     OVERLORD_SUPPLY_BUFFER_PER_BASE,
@@ -37,20 +41,25 @@ class ProductionManager:
         self._bot = bot
         self._evo_ordered = False
         self._rw_ordered = False
+        self._wants_expand = False
 
     async def step(self) -> None:
         bot = self._bot
         blackboard = getattr(bot, "blackboard", None)
         action = blackboard.current_action if blackboard else MacroAction.STANDARD_MACRO
+        self._wants_expand = False
 
         # Non-larva production first (uses hatchery build queue)
         await self._train_queens()
 
+        # Take a new base when saturated and army can defend it
+        await self._check_expand()
+
         # Tech buildings (uses drone + minerals)
         await self._ensure_tech_buildings(action)
 
-        # Gas buildings (capped, alongside tech)
-        await self._ensure_gas_buildings(action)
+        # Gas buildings (cumulative cap based on tech)
+        await self._ensure_gas_buildings()
 
         if not bot.larva:
             return
@@ -59,6 +68,13 @@ class ProductionManager:
         self._build_overlords()
 
         if not bot.larva:
+            return
+
+        # Reserve minerals for pending expansion — only spend on drones, not army
+        if self._wants_expand:
+            for larva in bot.larva:
+                if bot.workers.amount < self._drone_target() and bot.can_afford(UnitTypeId.DRONE):
+                    larva.train(UnitTypeId.DRONE)
             return
 
         # Larva spending
@@ -85,6 +101,43 @@ class ProductionManager:
                 larva.train(UnitTypeId.ROACH)
             elif pool_ready and bot.can_afford(UnitTypeId.ZERGLING):
                 larva.train(UnitTypeId.ZERGLING)
+
+    # ── Expansion ─────────────────────────────────────────────────────────
+
+    async def _check_expand(self) -> None:
+        bot = self._bot
+
+        if bot.already_pending(UnitTypeId.HATCHERY):
+            return
+
+        # Need roach warren before expanding beyond natural
+        if bot.townhalls.amount >= 2 and not bot.structures(UnitTypeId.ROACHWARREN).exists:
+            return
+
+        # Check mineral saturation across ready bases
+        ideal = sum(th.ideal_harvesters for th in bot.townhalls.ready)
+        if ideal <= 0:
+            return
+        saturation = bot.workers.amount / ideal
+        if saturation < EXPAND_SATURATION_THRESHOLD:
+            return
+
+        # Army must be sufficient: more bases need more army to defend
+        next_base = bot.townhalls.amount + 1
+        required_army = next_base * EXPAND_ARMY_PER_BASE
+        if bot.supply_army < required_army:
+            return
+
+        # Signal that we want to expand — reserve minerals by skipping
+        # army production this step (handled via _wants_expand flag)
+        self._wants_expand = True
+
+        if not bot.can_afford(UnitTypeId.HATCHERY):
+            return
+
+        await bot.expand_now()
+        self._wants_expand = False
+        logger.info(f"Production: expanding to base {next_base} (saturation={saturation:.0%}, army={bot.supply_army})")
 
     # ── Queens ──────────────────────────────────────────────────────────────
 
@@ -155,33 +208,43 @@ class ProductionManager:
 
     # ── Gas buildings ───────────────────────────────────────────────────────
 
-    async def _ensure_gas_buildings(self, action: MacroAction) -> None:
-        """Build extractors when tech demands gas, capped to avoid over-gassing.
+    async def _ensure_gas_buildings(self) -> None:
+        """Build extractors based on what tech is spending gas.
 
-        The opening build order handles the first extractor. Additional
-        extractors are built when TECH_TO_ROACH fires so gas is flowing by
-        the time the roach warren finishes.
+        Gas cap is cumulative: each tech building adds extractors.
+        No tech = 0 extractors. Pool = 1. Pool + RW = 3. Etc.
         """
         bot = self._bot
 
-        has_rw = bot.structures(UnitTypeId.ROACHWARREN).exists
-        wants_tech = action == MacroAction.TECH_TO_ROACH
-        if not has_rw and not wants_tech:
+        gas_cap = self._gas_cap()
+        if gas_cap <= 0:
             return
 
         current_gas = bot.gas_buildings.amount + bot.already_pending(UnitTypeId.EXTRACTOR)
-        if current_gas >= GAS_CAP_ROACH_TECH:
+        if current_gas >= gas_cap:
             return
 
         for th in bot.townhalls.ready:
             geysers = bot.vespene_geyser.closer_than(10.0, th.position)
             for geyser in geysers:
-                if current_gas >= GAS_CAP_ROACH_TECH:
+                if current_gas >= gas_cap:
                     return
                 if not bot.gas_buildings.closer_than(1.0, geyser.position).exists:
                     if bot.can_afford(UnitTypeId.EXTRACTOR):
                         await bot.build(UnitTypeId.EXTRACTOR, geyser)
                         current_gas += 1
+
+    def _gas_cap(self) -> int:
+        """Cumulative gas cap based on existing tech buildings."""
+        bot = self._bot
+        cap = 0
+        if bot.structures(UnitTypeId.SPAWNINGPOOL).exists:
+            cap += GAS_PER_SPAWNING_POOL
+        if bot.structures(UnitTypeId.ROACHWARREN).exists:
+            cap += GAS_PER_ROACH_WARREN
+        if bot.structures(UnitTypeId.EVOLUTIONCHAMBER).exists:
+            cap += GAS_PER_EVO_CHAMBER
+        return cap
 
     # ── Overlords ───────────────────────────────────────────────────────────
 

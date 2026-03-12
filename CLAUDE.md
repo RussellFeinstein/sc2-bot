@@ -48,6 +48,7 @@ sc2-bot/
     macro/
       build_order.py      # Build-order executor (supply, timings)
       economy.py          # Drone saturation, gas management
+      placement.py        # Building placement away from mineral line
       production.py       # Larva spending, unit mix decisions
       upgrades.py         # Upgrade priority tables
 
@@ -82,10 +83,11 @@ sc2-bot/
     ablations/            # Scripts for controlled ablation experiments
 
   tests/
-    test_feature_extractor.py
-    test_belief_state.py
+    test_army_manager.py
+    test_blackboard.py
+    test_opening_book.py
+    test_schemas.py
     test_strategic_policy.py
-    test_build_order.py
 ```
 
 ## Strategic Action Space (finite enum — key design decision)
@@ -145,7 +147,7 @@ mypy bot/ training/
 
 ## Version File
 
-`pyproject.toml` — current: `0.1.4`
+`pyproject.toml` — current: `0.1.8`
 
 ## Key Decisions
 
@@ -161,10 +163,11 @@ mypy bot/ training/
 
 ## Known Issues / TODO
 
-- Phase 1: Only scripted bot exists; no ML models trained yet.
+- Only scripted bot exists; no ML models trained yet (Phase 4+).
 - SC2 headless server setup for CI/automated testing not configured.
-- `ladderbots.json` format for AI Arena submission not yet written.
-- No opponent memory or per-opponent adaptation (Phase 5).
+- No upgrades beyond metabolic boost (roach speed, +1 missile next).
+- No engagement evaluation — bot always commits to fights.
+- No opponent memory or per-opponent adaptation (Phase 6).
 
 ## Roadmap
 
